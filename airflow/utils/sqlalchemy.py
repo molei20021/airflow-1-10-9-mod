@@ -36,6 +36,16 @@ from airflow.utils.log.logging_mixin import LoggingMixin
 log = LoggingMixin().log
 utc = pendulum.timezone('UTC')
 
+from airflow import configuration as conf
+try:
+	tz = conf.get("core", "default_timezone")
+	if tz == "system":
+		utc = pendulum.local_timezone()
+	else:
+		utc = pendulum.timezone(tz)
+except Exception:
+	pass
+
 
 def setup_event_handlers(engine):
     @event.listens_for(engine, "connect")
@@ -54,7 +64,7 @@ def setup_event_handlers(engine):
         @event.listens_for(engine, "connect")
         def set_mysql_timezone(dbapi_connection, connection_record):
             cursor = dbapi_connection.cursor()
-            cursor.execute("SET time_zone = '+00:00'")
+            # cursor.execute("SET time_zone = '+00:00'")
             cursor.close()
 
     @event.listens_for(engine, "checkout")
